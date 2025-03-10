@@ -87,34 +87,6 @@ const VideoExporter = ({ visualizerRef, audioFile, isPlaying, audioRef }) => {
   };
 
   const exportVideo = async () => {
-    // Add debug logging at the start of export
-    console.log('Starting export with audioFile:', audioFile);
-    console.log('Visualizer ref:', visualizerRef?.current);
-    console.log('Audio ref:', audioRef?.current);
-
-    // Add more robust checks for audioFile
-    if (!visualizerRef?.current) {
-      setError('Visualizer not initialized');
-      return;
-    }
-
-    if (!audioFile) {
-      console.error('No audio file provided');
-      setError('Please upload a valid audio file');
-      return;
-    }
-
-    if (!audioFile.filename) {
-      console.error('Audio file missing filename property:', audioFile);
-      setError('Invalid audio file format');
-      return;
-    }
-
-    if (isExporting) {
-      setError('Export already in progress');
-      return;
-    }
-
     try {
       cleanup();
       setIsExporting(true);
@@ -122,9 +94,10 @@ const VideoExporter = ({ visualizerRef, audioFile, isPlaying, audioRef }) => {
       setError(null);
       startTimeRef.current = Date.now();
 
-      // Store the filename at the start with additional safety check
-      const baseFileName = audioFile.filename || 'export';
-      exportFileNameRef.current = baseFileName.replace(/\.[^/.]+$/, '') + '_visualization.webm';
+      // Enable high-quality mode in visualizer
+      if (visualizerRef.current && visualizerRef.current.setExportMode) {
+        visualizerRef.current.setExportMode(true);
+      }
 
       // Get the canvas - handle both 2D and 3D visualizations
       let canvas;
@@ -147,6 +120,19 @@ const VideoExporter = ({ visualizerRef, audioFile, isPlaying, audioRef }) => {
       const originalHeight = canvas.height;
       canvas.width = width;
       canvas.height = height;
+
+      // Configure canvas for high quality
+      const ctx = canvas.getContext('2d', {
+        alpha: false,
+        desynchronized: false,
+        preserveDrawingBuffer: true
+      });
+      
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.globalCompositeOperation = 'source-over';
+      }
 
       // Get audio element from ref
       const audioElement = audioRef.current;
@@ -175,7 +161,31 @@ const VideoExporter = ({ visualizerRef, audioFile, isPlaying, audioRef }) => {
       audioSource.connect(audioDestination);
 
       // Setup canvas stream
+      const frameBuffer = [];
+      const bufferSize = 5; // Buffer 5 frames for smooth capture
+      
+      // Create a high-performance canvas stream
       const canvasStream = canvas.captureStream(60); // 60 FPS for highest quality
+      const videoTrack = canvasStream.getVideoTracks()[0];
+      
+      // Enhance video track settings if available
+      if (videoTrack) {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities) {
+          try {
+            videoTrack.applyConstraints({
+              width: { ideal: width },
+              height: { ideal: height },
+              frameRate: { ideal: 60 },
+              latency: { ideal: 0 },
+              resizeMode: { ideal: 'none' }
+            });
+          } catch (e) {
+            console.warn('Could not apply video track constraints:', e);
+          }
+        }
+      }
+
       streamRef.current = canvasStream;
 
       // Combine video and audio streams
@@ -184,11 +194,42 @@ const VideoExporter = ({ visualizerRef, audioFile, isPlaying, audioRef }) => {
         ...audioDestination.stream.getAudioTracks()
       ]);
 
+      // Check supported MIME types
+      const getSupportedMimeType = () => {
+        const types = [
+          'video/mp4;codecs=h264',
+          'video/mp4',
+          'video/webm;codecs=h264',
+          'video/webm;codecs=vp9',
+          'video/webm'
+        ];
+        
+        for (const type of types) {
+          if (MediaRecorder.isTypeSupported(type)) {
+            return type;
+          }
+        }
+        return 'video/webm'; // Final fallback
+      };
+
+      const mimeType = getSupportedMimeType();
+      const fileExtension = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm';
+      
+      // Store filename with correct extension
+      exportFileNameRef.current = audioFile.filename.replace(/\.[^/.]+$/, '') + `_visualization.${fileExtension}`;
+
       // Setup MediaRecorder with highest quality settings
       const mediaRecorder = new MediaRecorder(combinedStream, {
-        mimeType: 'video/webm;codecs=vp9,opus',
-        videoBitsPerSecond: 8000000, // 8 Mbps
-        audioBitsPerSecond: 320000    // 320 kbps
+        mimeType: mimeType,
+        videoBitsPerSecond: resolution === '4K' ? 40000000 : 
+                           resolution === '1080p' ? 20000000 :
+                           resolution === '720p' ? 10000000 : 8000000,
+        audioBitsPerSecond: 320000,    // 320 kbps for high quality audio
+        videoConstraints: {
+          width: { ideal: width },
+          height: { ideal: height },
+          frameRate: { ideal: 60 }
+        }
       });
 
       mediaRecorderRef.current = mediaRecorder;
@@ -202,14 +243,23 @@ const VideoExporter = ({ visualizerRef, audioFile, isPlaying, audioRef }) => {
 
       // Setup recording completion handler
       mediaRecorder.onstop = () => {
+        // Disable high-quality mode
+        if (visualizerRef.current && visualizerRef.current.setExportMode) {
+          visualizerRef.current.setExportMode(false);
+        }
+
         if (audioElement) {
           audioElement.removeEventListener('ended', handleAudioEnd);
           audioElement.pause();
           audioElement.currentTime = 0;
         }
 
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+        // Create blob with correct MIME type
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         const url = URL.createObjectURL(blob);
+
+        // Use the stored filename with .mp4 extension
+        exportFileNameRef.current = audioFile.filename.replace(/\.[^/.]+$/, '') + `_visualization.${fileExtension}`;
 
         // Use the stored filename
         const a = document.createElement('a');
@@ -270,6 +320,12 @@ const VideoExporter = ({ visualizerRef, audioFile, isPlaying, audioRef }) => {
       console.error('Export error:', error);
       setError(error.message);
       setIsExporting(false);
+      
+      // Ensure high-quality mode is disabled on error
+      if (visualizerRef.current && visualizerRef.current.setExportMode) {
+        visualizerRef.current.setExportMode(false);
+      }
+      
       cleanup();
     }
   };

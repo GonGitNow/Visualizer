@@ -19,11 +19,12 @@ const Visualizer = forwardRef(({ audioFile, template, isPlaying, onAudioElementC
   const sourceRef = useRef(null);
   const audioElementRef = useRef(null);
   const particlesRef = useRef([]);
-  const timeRef = useRef(0); // Add timeRef to track animation time
-  const [resolution, setResolution] = useState('1080p'); // Default to 1080p
+  const timeRef = useRef(0);
+  const [resolution, setResolution] = useState('1080p');
   const [audioData, setAudioData] = useState(null);
   const [use3D, setUse3D] = useState(false);
   const [parameters, setParameters] = useState(initialParameters);
+  const [isExporting, setIsExporting] = useState(false); // Add export mode flag
 
   // Check if template is a 3D visualization
   useEffect(() => {
@@ -249,25 +250,43 @@ const Visualizer = forwardRef(({ audioFile, template, isPlaying, onAudioElementC
       }
       // For 2D visualizations, use the regular canvas
       return canvasRef.current;
+    },
+    setExportMode: (exporting) => {
+      setIsExporting(exporting);
+      if (exporting) {
+        // Apply high-quality settings for export
+        if (analyserRef.current) {
+          analyserRef.current.fftSize = 2048; // Increase FFT size for better frequency resolution
+          analyserRef.current.smoothingTimeConstant = 0.5; // Reduce smoothing for more detail
+        }
+      } else {
+        // Restore normal settings
+        if (analyserRef.current) {
+          analyserRef.current.fftSize = 1024;
+          analyserRef.current.smoothingTimeConstant = 0.8;
+        }
+      }
     }
   }));
 
+  const getQualityMultiplier = () => isExporting ? 2 : 1;
+
   const initParticles = (ctx) => {
-    // Safety check - ensure context exists
     if (!ctx || !ctx.canvas) {
       console.error("Canvas context is null in initParticles");
       return;
     }
     
-    const count = Math.floor(((parameters.count || 50) / 50) * 200); // 100-400 particles based on count parameter
+    const qualityMultiplier = getQualityMultiplier();
+    const count = Math.floor(((parameters.count || 50) / 50) * 200 * qualityMultiplier);
     particlesRef.current = [];
     
     for (let i = 0; i < count; i++) {
       particlesRef.current.push({
         x: Math.random() * ctx.canvas.width,
         y: Math.random() * ctx.canvas.height,
-        size: Math.random() * ((parameters.size || 50) / 10) + 1, // 1-6 size based on size parameter
-        vx: (Math.random() - 0.5) * ((parameters.speed || 50) / 25), // Speed based on speed parameter
+        size: Math.random() * ((parameters.size || 50) / 10) + 1,
+        vx: (Math.random() - 0.5) * ((parameters.speed || 50) / 25),
         vy: (Math.random() - 0.5) * ((parameters.speed || 50) / 25),
         hue: Math.random() * 360
       });
