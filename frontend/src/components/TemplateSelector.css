@@ -1,0 +1,9 @@
+/* This CSS is no longer needed as we've moved the styles to App.css */
+/* The styles are now centralized in App.css for better maintenance */
+
+/* Add only the styles that aren't in App.css */
+.selected-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  opacity: 0.9;
+} 

@@ -1,0 +1,519 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  color: #fff;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: #000;
+}
+
+/* Header styles */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  padding: 0 2rem;
+  background: rgba(0,0,0,0.8);
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+header h1 {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-right: 2rem;
+}
+
+/* Completely redesigned template selector */
+.template-selector {
+  position: relative;
+}
+
+.template-dropdown {
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s ease;
+}
+
+.template-dropdown:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.template-dropdown:after {
+  content: '▼';
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+  transition: transform 0.2s ease;
+}
+
+.template-dropdown.active:after {
+  transform: rotate(180deg);
+}
+
+.template-options {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  bottom: auto;
+  right: 0;
+  background: rgba(20,20,20,0.95);
+  border-radius: 8px;
+  overflow: hidden;
+  width: 220px;
+  max-height: 400px; /* Increased to fit more options */
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 101;
+  transform-origin: top center;
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  pointer-events: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.3) rgba(0,0,0,0.2);
+}
+
+.template-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.template-options::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+.template-options::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.3);
+  border-radius: 3px;
+}
+
+.template-options.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+.template-button {
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  border-left: 3px solid transparent;
+}
+
+.template-button.active {
+  background: rgba(255,255,255,0.1);
+  border-left-color: #ff6b6b;
+}
+
+.template-button:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.template-button .icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Template group styling */
+.template-group {
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+
+.template-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.template-group-header {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.05);
+}
+
+/* Resolution selector styles */
+.resolution-selector {
+  position: relative;
+  margin-left: 1rem;
+}
+
+.resolution-dropdown {
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.resolution-dropdown:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.resolution-icon {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.resolution-options {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: rgba(20,20,20,0.95);
+  border-radius: 8px;
+  overflow: hidden;
+  width: 220px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 101;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.resolution-option {
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  display: block;
+  border-left: 3px solid transparent;
+}
+
+.resolution-option.active {
+  background: rgba(255,255,255,0.1);
+  border-left-color: #ff6b6b;
+}
+
+.resolution-option:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.resolution-option-name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.resolution-option-desc {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Main content */
+main {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding-top: 70px; /* Space for header */
+  padding-bottom: 80px; /* Space for controls */
+}
+
+/* Controls container */
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  gap: 1rem;
+}
+
+/* Controls overlay */
+.controls-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px; /* Further increased height for play button */
+  padding: 0 1.5rem;
+  background: rgba(0,0,0,0.8);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+  width: 100%;
+}
+
+/* Upload and Export buttons container */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Upload button styles */
+.upload-button {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.upload-button:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* Playback controls */
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  flex: 1;
+  width: 100%;
+  max-width: 1000px; /* Significantly increased from 600px */
+}
+
+/* Progress bar */
+.progress-bar {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.progress-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.progress-handle {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.progress-handle:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Time display */
+.time {
+  color: #fff;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 45px;
+}
+
+/* Export button */
+.export-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255,107,107,0.3);
+  white-space: nowrap;
+}
+
+.export-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255,107,107,0.4);
+}
+
+/* Visualizer section */
+.visualizer-section {
+  position: absolute;
+  top: 47%;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 210px); /* Adjusted for taller controls */
+  transform: translateY(-50%);
+  max-height: calc(100vh - 230px); /* Adjusted for taller controls */
+  margin-top: -5px; /* Minimal upward shift */
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Aspect ratio specific adjustments */
+.visualizer-section:has(.aspect-ratio-vertical) {
+  align-items: center;
+  justify-content: center;
+}
+
+.visualizer-section:has(.aspect-ratio-square) {
+  align-items: center;
+  justify-content: center;
+  height: auto;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    height: auto;
+    min-height: 100px;
+    padding: 1rem;
+  }
+
+  header h1 {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .template-options {
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    bottom: auto;
+    max-height: 300px;
+  }
+
+  .resolution-selector {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  .resolution-options {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  main {
+    padding-top: 100px; /* Adjusted for variable header height */
+  }
+
+  .controls-container {
+    width: 100%;
+  }
+  
+  .controls-section {
+    height: auto;
+    min-height: 180px; /* Increased for play button */
+    padding: 1rem;
+  }
+  
+  .visualizer-section {
+    top: 47%;
+    height: calc(100vh - 280px); /* Adjusted for taller controls on mobile */
+    max-height: calc(100vh - 300px); /* Adjusted for taller controls on mobile */
+    margin-top: -10px; /* Minimal upward shift on mobile */
+  }
+
+  /* Vertical format needs special handling on mobile */
+  .visualizer-section:has(.aspect-ratio-vertical) {
+    height: calc(100vh - 200px);
+  }
+  
+  .visualizer-section:has(.aspect-ratio-square) {
+    height: auto;
+    padding: 20px 0;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+} 
